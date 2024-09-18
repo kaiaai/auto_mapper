@@ -99,7 +99,7 @@ private:
     bool isExploring_ = false;
     int markerId_;
     string mapPath_;
-
+    bool feedbackPrinted_ = false;
 
     Subscription<PoseWithCovarianceStamped>::SharedPtr poseSubscription_;
     PoseWithCovarianceStamped::UniquePtr pose_;
@@ -127,7 +127,7 @@ private:
     struct Frontier {
         Point centroid;
         vector<Point> points;
-        string getKey() const{to_string(centroid.x) + "," + to_string(centroid.y);}
+        string getKey() const{return to_string(centroid.x) + "," + to_string(centroid.y);}
     };
 
     void poseTopicCallback(PoseWithCovarianceStamped::UniquePtr pose) {
@@ -246,7 +246,10 @@ private:
         send_goal_options.feedback_callback = [this](
                 const GoalHandleNavigateToPose::SharedPtr &,
                 const std::shared_ptr<const NavigateToPose::Feedback> &feedback) {
+            if (feedbackPrinted_)
+              return;
             RCLCPP_INFO(get_logger(), "Distance remaining: %f", feedback->distance_remaining);
+            feedbackPrinted_ = true;
         };
 
         send_goal_options.result_callback = [this](const GoalHandleNavigateToPose::WrappedResult &result) {
@@ -269,6 +272,7 @@ private:
                     break;
             }
         };
+        feedbackPrinted_ = false;
         poseNavigator_->async_send_goal(goal, send_goal_options);
     }
 
@@ -306,8 +310,8 @@ private:
         for (const auto &d: directions) {
             int newX = x + d.first;
             int newY = y + d.second;
-            if (newX > -1 && newX < costmap_.getSizeInCellsX() &&
-                newY > -1 && newY < costmap_.getSizeInCellsY()) {
+            if (newX > -1 && newX < int(costmap_.getSizeInCellsX()) &&
+                newY > -1 && newY < int(costmap_.getSizeInCellsY())) {
                 out.push_back(costmap_.getIndex(newX, newY));
             }
         }
