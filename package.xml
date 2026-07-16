@@ -10,7 +10,6 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <depend>rclcpp_lifecycle</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
@@ -27,25 +26,31 @@
   <depend>map_msgs</depend>
   <depend>angles</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>behaviortree_cpp_v3</depend>
 
-  <exec_depend>controller_manager</exec_depend>
-  <exec_depend>joint_state_broadcaster</exec_depend>
-  <exec_depend>forward_command_controller</exec_depend>
-  <exec_depend>diff_drive_controller</exec_depend>
-  <exec_depend>joint_trajectory_controller</exec_depend>
-  <exec_depend>ros2_controllers_test_nodes</exec_depend>
-  <exec_depend>joint_state_publisher</exec_depend>
-  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <!-- bringup_launch.py runs the nav2 nodes in a component container. -->
+  <exec_depend>rclcpp_components</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>rviz2</exec_depend>
-  <exec_depend>xacro</exec_depend>
-  <exec_depend>robot_localization</exec_depend>
+
+  <!-- Deliberately NOT dependencies:
+       rviz2 - auto_mapper.launch.py can start it, but only with rviz:=true,
+         which is off by default. This package drives a robot to build a map and
+         runs onboard, where there is no display; making rviz2 a dependency
+         installs a GUI stack (and its Qt/OpenGL chain) on the robot. Install
+         rviz2 on the dev PC that uses rviz:=true.
+       joint_state_publisher_gui - never referenced; pure GUI.
+       controller_manager, joint_state_broadcaster, forward_command_controller,
+       diff_drive_controller, joint_trajectory_controller,
+       ros2_controllers_test_nodes, ros2_control_test_assets - the ros2_control
+         stack. Never referenced; this package sends nav2 goals, it does not
+         host controller plugins.
+       joint_state_publisher, xacro, robot_localization - never referenced;
+         the robot description package owns those.
+       behaviortree_cpp_v3, rclcpp_lifecycle - never included, and not in the
+         CMakeLists deps list, so they were never found or linked.
+       ament_cmake_gmock - there are no tests to build. -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-  <test_depend>ament_cmake_gmock</test_depend>
-  <test_depend>ros2_control_test_assets</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

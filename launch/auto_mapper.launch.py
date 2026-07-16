@@ -1,6 +1,7 @@
 import launch_ros
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetRemap
@@ -16,6 +17,16 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "is_sim",
             default_value="true",
+        ),
+        # Off by default: this package drives a robot to build a map and is run
+        # onboard, where there is no display and rviz2 should not be installed.
+        # Pass rviz:=true on a dev PC (which has rviz2) to get the view.
+        DeclareLaunchArgument(
+            "rviz",
+            default_value="false",
+            choices=["true", "false"],
+            description="Start rviz2 with this package's config. Requires rviz2 "
+                        "to be installed; it is not a dependency of this package.",
         )]
 
     robot_nodes = create_robot_node()
@@ -76,7 +87,8 @@ def create_robot_node() -> list:
                     executable="rviz2",
                     name="rviz2",
                     output="log",
-                    arguments=["-d", rviz_config_file]
+                    arguments=["-d", rviz_config_file],
+                    condition=IfCondition(LaunchConfiguration("rviz"))
                 )
             ]
         )
